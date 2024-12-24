@@ -1,103 +1,414 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-		<meta charset="utf-8">
+  <head>
+    <meta charset="utf-8" />
 
-		<meta name="description" content="A Christmas tree built out of form elements." />
-		<meta name="author" content="Hakim El Hattab" />
+    <meta
+      name="description"
+      content="A Christmas tree built out of form elements."
+    />
+    <meta
+      name="author"
+      content="Hakim El Hattab"
+    />
 
-		<meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta
+      http-equiv="X-UA-Compatible"
+      content="chrome=1"
+    />
 
-        <title>DOM Tree</title>
+    <title>Christmas Tree</title>
 
-		<link href="css/domtree.css" rel="stylesheet" media="screen" />
+    <link
+      href="css/domtree.css"
+      rel="stylesheet"
+      media="screen"
+    />
 
-		<link href='https://fonts.googleapis.com/css?family=Armata' rel='stylesheet' type='text/css'>
+    <link
+      href="https://fonts.googleapis.com/css?family=Armata"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <style>
+      .snowflake {
+        position: fixed;
+        color: #fff;
+        font-size: 1em;
+        font-family: Arial, sans-serif;
+        text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+        user-select: none;
+        z-index: 1000;
+        pointer-events: none;
+        opacity: 0;
+      }
 
-    </head>
-    <body>
-    	<div class="tree"></div>
+      @keyframes snowfall {
+        0% {
+          transform: translateY(-100vh) rotate(0deg);
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(100vh) rotate(360deg);
+          opacity: 0.3;
+        }
+      }
 
-		<script src="js/domtree.js"></script>
+      .christmas-lights {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        padding: 5px;
+        gap: 30px; /* Increased spacing between lights */
+        justify-content: center;
+        z-index: 1000;
+        height: 25px;
+        /* Removed background: rgba(0, 0, 0, 0.1); */
+      }
 
-		<!-- Third party scripts and sharing UI -->
-		<p class="project-title">DOM Tree</p>
+      .light {
+        width: 12px; /* Smaller light size */
+        height: 12px;
+        border-radius: 50%;
+        animation: glow 1.5s infinite alternate;
+        filter: blur(1px);
+        position: relative;
+      }
 
-		<div class="credits">
-			<a href="https://github.com/hakimel/dom-tree">Source on GitHub</a>
-			<a href="https://twitter.com/share?text=A%20Christmas%20tree%20made%20out%20of%20form%20elements&url=http://lab.hakim.se/domtree&via=hakimel&related=hakimel" target="_blank">Tweet this</a>
-			<a href="https://twitter.com/hakimel">Follow @hakimel</a>
-		</div>
+      .light::after {
+        content: '';
+        position: absolute;
+        top: -5px; /* Adjusted wire position */
+        left: 5px;
+        width: 2px;
+        height: 5px;
+        background: rgba(51, 51, 51, 0.5); /* Made wire more transparent */
+      }
 
-		<style type="text/css" media="screen">
-			.project-title {
-				position: absolute;
-				left: 25px;
-				bottom: 20px;
+      @keyframes glow {
+        0% {
+          transform: scale(0.8) translateY(0);
+          opacity: 0.7;
+          box-shadow: 0 0 5px currentColor;
+        }
+        100% {
+          transform: scale(1) translateY(2px);
+          opacity: 1;
+          box-shadow: 0 0 15px currentColor, 0 0 25px currentColor;
+        }
+      }
 
-				font-size: 16px;
-				color: #fff;
-			}
+      .welcome-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #b72424;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        animation: fadeOut 1s ease-in-out 3s forwards;
+      }
 
-			.credits {
-				position: absolute;
-				right: 20px;
-				bottom: 25px;
-				font-size: 15px;
-				z-index: 20;
-				color: #fff;
-				vertical-align: middle;
-			}
+      .welcome-text {
+        font-size: 4em;
+        color: white;
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        animation: welcomeText 2s ease-in-out;
+        font-family: 'Armata', sans-serif;
+      }
 
-			.credits * + * {
-				margin-left: 15px;
-			}
+      @keyframes welcomeText {
+        0% {
+          transform: scale(0.1);
+          opacity: 0;
+        }
+        50% {
+          transform: scale(1.2);
+          opacity: 0.5;
+        }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
 
-			.credits a {
-				padding: 8px 10px;
-				color: rgba(255,255,255,0.7);
-				border: 2px solid rgba(255,255,255,0.7);
-				text-decoration: none;
-			}
+      @keyframes fadeOut {
+        to {
+          opacity: 0;
+          visibility: hidden;
+        }
+      }
 
-			.credits a:hover {
-				border-color: #fff;
-				color: #fff;
-			}
+      /* Hide main content initially */
+      .main-content {
+        opacity: 0;
+        animation: fadeIn 1s ease-in-out 3.5s forwards;
+      }
 
-			@media screen and (max-width: 1040px) {
-				.project-title {
-					display: none;
-				}
+      @keyframes fadeIn {
+        to {
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+  <body onload="playBackgroundMusic(); createChristmasLights()">
+    <!-- Add welcome overlay -->
+    <div class="welcome-overlay">
+      <div class="welcome-text">🎄Merry Xmas - Bryan🎄</div>
+    </div>
 
-				.credits {
-					width: 100%;
-					left: 0;
-					right: auto;
-					bottom: 0;
-					padding: 30px 0;
-					background: #b72424;
-					text-align: center;
-				}
+    <!-- Wrap existing content in main-content div -->
+    <div class="main-content">
+      <div class="tree"></div>
 
-				.credits a {
-					display: inline-block;
-					margin-top: 7px;
-					margin-bottom: 7px;
-				}
-			}
-		</style>
+      <div
+        id="christmas-lights"
+        class="christmas-lights"
+      ></div>
 
-		<script>
-			var _gaq = [['_setAccount', 'UA-15240703-1'], ['_trackPageview']];
-			(function(d, t) {
-			var g = d.createElement(t),
-			    s = d.getElementsByTagName(t)[0];
-			g.async = true;
-			g.src = ('https:' == location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-			s.parentNode.insertBefore(g, s);
-			})(document, 'script');
-		</script>
+      <div
+        id="wishListContainer"
+        style="position: fixed; left: 20px; top: 20px; background: rgba(255, 255, 255, 0.9); padding: 15px; border-radius: 10px; max-width: 300px"
+      >
+        <h3 style="color: #b72424; margin-top: 0">🎁 Wish List Natal</h3>
+        <input
+          type="text"
+          id="wishInput"
+          placeholder="Tulis harapan natalmu..."
+          style="width: 100%; padding: 5px; margin-bottom: 10px; border: 1px solid #b72424; border-radius: 5px"
+        />
+        <button
+          onclick="playClickSound(); addWish()"
+          style="background: #b72424; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer"
+        >
+          Tambah Harapan
+        </button>
+        <ul
+          id="wishList"
+          style="list-style-type: none; padding: 0; margin-top: 10px; color: #010101"
+        ></ul>
+      </div>
 
-    </body>
+      <div
+        id="musicControl"
+        style="position: fixed; top: 20px; right: 20px; z-index: 1000"
+      >
+        <button
+          onclick="toggleMusic()"
+          style="background: rgba(255, 255, 255, 0.7); border: none; padding: 10px; border-radius: 50%; cursor: pointer"
+        >
+          <span id="musicIcon">🔇</span>
+        </button>
+      </div>
+
+      <div id="snow-container"></div>
+
+      <script src="js/domtree.js"></script>
+      <script src="script.js"></script>
+
+      <div class="credits">
+        <a
+          href="https://instagram.com/bryyzxm"
+          target="_blank"
+          >Follow @bryan_fildy</a
+        >
+      </div>
+
+      <style
+        type="text/css"
+        media="screen"
+      >
+        .project-title {
+          position: absolute;
+          left: 25px;
+          bottom: 20px;
+
+          font-size: 16px;
+          color: #fff;
+        }
+
+        .credits {
+          position: absolute;
+          right: 20px;
+          bottom: 25px;
+          font-size: 15px;
+          z-index: 20;
+          color: #fff;
+          vertical-align: middle;
+        }
+
+        .credits * + * {
+          margin-left: 15px;
+        }
+
+        .credits a {
+          padding: 8px 10px;
+          color: rgba(255, 255, 255, 0.7);
+          border: 2px solid rgba(255, 255, 255, 0.7);
+          text-decoration: none;
+        }
+
+        .credits a:hover {
+          border-color: #fff;
+          color: #fff;
+        }
+
+        @media screen and (max-width: 1040px) {
+          .project-title {
+            display: none;
+          }
+
+          .credits {
+            width: 100%;
+            left: 0;
+            right: auto;
+            bottom: 0;
+            padding: 30px 0;
+            background: #b72424;
+            text-align: center;
+          }
+
+          .credits a {
+            display: inline-block;
+            margin-top: 7px;
+            margin-bottom: 7px;
+          }
+        }
+
+        @keyframes fall {
+          to {
+            transform: translateY(100vh);
+          }
+        }
+      </style>
+
+      <script>
+        let audioElement;
+        let isPlaying = false;
+
+        function playBackgroundMusic() {
+          audioElement = new Audio('main.mp3');
+          audioElement.loop = true;
+          audioElement.volume = 0.5;
+
+          audioElement
+            .play()
+            .then(() => {
+              isPlaying = true;
+              document.getElementById('musicIcon').textContent = '🔊';
+            })
+            .catch(function (error) {
+              console.log('Audio playback failed: ' + error);
+              document.getElementById('musicIcon').textContent = '🔇';
+            });
+        }
+
+        function toggleMusic() {
+          if (!audioElement) return;
+
+          if (isPlaying) {
+            audioElement.pause();
+            document.getElementById('musicIcon').textContent = '🔇';
+          } else {
+            audioElement.play();
+            document.getElementById('musicIcon').textContent = '🔊';
+          }
+          isPlaying = !isPlaying;
+        }
+
+        function addWish() {
+          const wishInput = document.getElementById('wishInput');
+          const wishList = document.getElementById('wishList');
+
+          if (wishInput.value.trim() !== '') {
+            const li = document.createElement('li');
+            li.innerHTML = `
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                <span>🎄 ${wishInput.value}</span>
+                <button onclick="playClickSound(); this.parentElement.remove()" style="background: #b72424; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer;">×</button>
+              </div>
+            `;
+            wishList.appendChild(li);
+            wishInput.value = '';
+
+            // Create multiple snowflakes
+            for (let i = 0; i < 20; i++) {
+              setTimeout(() => createSnowflake(), i * 100);
+            }
+          }
+        }
+
+        function createSnowflake() {
+          const snowflakes = ['❅', '❆', '❄', '✺', '✵', '✹', '※', '✻', '❉', '❋'];
+          const container = document.getElementById('snow-container');
+          const snowflake = document.createElement('div');
+          const randomSnowflake = snowflakes[Math.floor(Math.random() * snowflakes.length)];
+
+          snowflake.innerHTML = randomSnowflake;
+          snowflake.className = 'snowflake';
+          snowflake.style.left = Math.random() * 100 + 'vw';
+          snowflake.style.animationDuration = Math.random() * 3 + 2 + 's'; // Between 2-5s
+          snowflake.style.opacity = Math.random();
+          snowflake.style.fontSize = Math.random() * 20 + 10 + 'px'; // Between 10-30px
+
+          container.appendChild(snowflake);
+
+          // Apply the animation
+          snowflake.style.animation = `snowfall ${snowflake.style.animationDuration} linear forwards`;
+
+          // Remove the snowflake after animation completes
+          setTimeout(() => {
+            snowflake.remove();
+          }, parseFloat(snowflake.style.animationDuration) * 1000);
+        }
+
+        function playClickSound() {
+          const audio = new Audio('click.mp3');
+          audio.volume = 0.5;
+          audio.play();
+        }
+
+        function createChristmasLights() {
+          const colors = [
+            '#ff0000', // red
+            '#00ff00', // green
+            '#ffff00', // yellow
+            '#ff0000', // red
+            '#00ff00', // green
+            '#ffff00', // yellow
+          ];
+          const container = document.getElementById('christmas-lights');
+          const numberOfLights = Math.floor(window.innerWidth / 50); // More spacing between lights
+
+          // Clear existing lights
+          container.innerHTML = '';
+
+          for (let i = 0; i < numberOfLights; i++) {
+            const light = document.createElement('div');
+            light.className = 'light';
+            light.style.color = colors[i % colors.length];
+            light.style.backgroundColor = colors[i % colors.length];
+            light.style.animationDelay = `${i * 0.15}s`; // Slower stagger effect
+            container.appendChild(light);
+          }
+        }
+
+        // Add window resize handler for responsive lights
+        window.addEventListener('resize', () => {
+          createChristmasLights();
+        });
+
+        // Prevent any interactions during welcome animation
+        document.querySelector('.welcome-overlay').addEventListener('click', (e) => {
+          e.stopPropagation();
+        });
+      </script>
+    </div>
+  </body>
 </html>
